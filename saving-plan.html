@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>从零到一百万</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10B981', // 绿色作为主色调，代表财务增长
+                        secondary: '#3B82F6', // 蓝色作为辅助色，代表信任
+                        neutral: '#F3F4F6', // 浅灰色作为中性色
+                        danger: '#EF4444', // 红色用于支出操作
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .progress-shine {
+                position: relative;
+                overflow: hidden;
+            }
+            .progress-shine::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 50%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                animation: shine 2s infinite;
+            }
+            @keyframes shine {
+                to {
+                    left: 100%;
+                }
+            }
+            .number-animation {
+                transition: all 0.5s ease-out;
+            }
+            .card-hover {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <header class="bg-white/95 backdrop-blur-sm shadow-sm sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-piggy-bank text-primary text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">从零到一百万</h1>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-gray-600 hover:text-primary transition-colors">首页</a>
+                <a href="#history" class="text-gray-600 hover:text-primary transition-colors">交易记录</a>
+                <a href="#" class="text-gray-600 hover:text-primary transition-colors">目标设置</a>
+                <button id="reset-data" class="text-gray-600 hover:text-danger transition-colors">
+                    <i class="fa fa-refresh mr-1"></i> 重置数据
+                </button>
+            </div>
+            <button class="md:hidden text-gray-600">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- 目标概览卡片 -->
+        <section class="mb-10 pt-2">
+            <div class="bg-gradient-to-r from-primary/90 to-secondary/90 rounded-2xl shadow-lg p-6 md:p-8 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div class="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full -ml-20 -mb-20"></div>
+                
+                <div class="relative z-10">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-2">终极目标</h2>
+                    <p class="text-white/80 mb-6">从0到1,000,000元的财富积累之旅</p>
+                    
+                    <!-- 当前金额显示 -->
+                    <div class="mb-6">
+                        <p class="text-white/80 text-sm mb-1">当前金额</p>
+                        <div class="flex items-end">
+                            <span id="current-amount" class="text-3xl md:text-4xl font-bold number-animation">0.00</span>
+                            <span class="text-lg md:text-xl ml-1 mb-1">元</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 进度条 -->
+                    <div class="mb-2">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>0元</span>
+                            <span id="progress-percentage">0.00%</span>
+                            <span>1,000,000元</span>
+                        </div>
+                        <div class="h-3 bg-white/20 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-white progress-shine rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 剩余金额 -->
+                    <p class="text-sm text-white/80 mt-3">
+                        距离目标还剩: <span id="remaining-amount" class="font-medium">1,000,000.00</span>元
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 操作区域 -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <!-- 存款表单 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-plus text-primary"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">存入金额</h3>
+                </div>
+                
+                <form id="deposit-form" class="space-y-4">
+                    <div>
+                        <label for="deposit-amount" class="block text-sm font-medium text-gray-700 mb-1">金额 (元)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">¥</span>
+                            <input type="number" id="deposit-amount" name="deposit-amount" min="0.01" step="0.01" 
+                                   class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                   placeholder="输入存入金额">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="deposit-note" class="block text-sm font-medium text-gray-700 mb-1">备注 (可选)</label>
+                        <input type="text" id="deposit-note" name="deposit-note" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                               placeholder="例如：工资收入">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center justify-center">
+                        <i class="fa fa-check mr-2"></i> 确认存入
+                    </button>
+                </form>
+            </div>
+            
+            <!-- 支出表单 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-minus text-danger"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">支出金额</h3>
+                </div>
+                
+                <form id="expense-form" class="space-y-4">
+                    <div>
+                        <label for="expense-amount" class="block text-sm font-medium text-gray-700 mb-1">金额 (元)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">¥</span>
+                            <input type="number" id="expense-amount" name="expense-amount" min="0.01" step="0.01" 
+                                   class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-danger focus:border-danger transition-all"
+                                   placeholder="输入支出金额">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="expense-note" class="block text-sm font-medium text-gray-700 mb-1">备注 (可选)</label>
+                        <input type="text" id="expense-note" name="expense-note" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-danger focus:border-danger transition-all"
+                               placeholder="例如：日常消费">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-danger hover:bg-danger/90 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center justify-center">
+                        <i class="fa fa-check mr-2"></i> 确认支出
+                    </button>
+                </form>
+            </div>
+        </section>
+        
+        <!-- 统计卡片 -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-600 font-medium">总存入</h3>
+                    <i class="fa fa-arrow-down text-primary text-xl"></i>
+                </div>
+                <p id="total-deposits" class="text-2xl font-bold text-gray-800">0.00 元</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-600 font-medium">总支出</h3>
+                    <i class="fa fa-arrow-up text-danger text-xl"></i>
+                </div>
+                <p id="total-expenses" class="text-2xl font-bold text-gray-800">0.00 元</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-600 font-medium">交易次数</h3>
+                    <i class="fa fa-exchange text-secondary text-xl"></i>
+                </div>
+                <p id="transaction-count" class="text-2xl font-bold text-gray-800">0 次</p>
+            </div>
+        </section>
+        
+        <!-- 交易记录 -->
+        <section id="history" class="mb-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">交易记录</h2>
+                <div class="flex space-x-4">
+                    <button id="clear-history" class="text-sm text-gray-500 hover:text-danger transition-colors flex items-center">
+                        <i class="fa fa-trash-o mr-1"></i> 清空记录
+                    </button>
+                    <button id="reset-data-mobile" class="text-sm text-gray-500 hover:text-danger transition-colors flex items-center md:hidden">
+                        <i class="fa fa-refresh mr-1"></i> 重置数据
+                    </button>
+                </div>
+            </div>
+            
+            <div id="transactions-container" class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div id="no-transactions" class="py-16 text-center text-gray-500">
+                    <i class="fa fa-file-text-o text-4xl mb-3 opacity-30"></i>
+                    <p>暂无交易记录</p>
+                </div>
+                
+                <ul id="transactions-list" class="divide-y divide-gray-100 hidden">
+                    <!-- 交易记录将通过JavaScript动态添加 -->
+                </ul>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h3 class="text-lg font-semibold mb-2">百万攒钱计划</h3>
+                <p class="text-gray-400 text-sm">每一小步，都是通往财务自由的一大步</p>
+                <div class="mt-4 flex justify-center space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-question-circle"></i> 帮助中心
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-info-circle"></i> 关于我们
+                    </a>
+                </div>
+                <p class="text-gray-500 text-xs mt-6">© 2023 百万攒钱计划 - 让储蓄变得更简单</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- 通知提示框 -->
+    <div id="notification" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center z-50"></div>
+
+    <script>
+        // 攒钱计划应用的主要逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            // 目标金额：100万
+            const TARGET_AMOUNT = 1000000;
+            
+            // 获取DOM元素
+            const currentAmountEl = document.getElementById('current-amount');
+            const progressBarEl = document.getElementById('progress-bar');
+            const progressPercentageEl = document.getElementById('progress-percentage');
+            const remainingAmountEl = document.getElementById('remaining-amount');
+            const depositForm = document.getElementById('deposit-form');
+            const expenseForm = document.getElementById('expense-form');
+            const transactionsList = document.getElementById('transactions-list');
+            const noTransactionsEl = document.getElementById('no-transactions');
+            const totalDepositsEl = document.getElementById('total-deposits');
+            const totalExpensesEl = document.getElementById('total-expenses');
+            const transactionCountEl = document.getElementById('transaction-count');
+            const clearHistoryBtn = document.getElementById('clear-history');
+            const resetDataBtn = document.getElementById('reset-data');
+            const resetDataMobileBtn = document.getElementById('reset-data-mobile');
+            const notificationEl = document.getElementById('notification');
+            
+            // 初始化数据（使用浮点数处理小数金额）
+            let currentAmount = 0;
+            let totalDeposits = 0;
+            let totalExpenses = 0;
+            let transactions = [];
+            
+            // 从本地存储加载数据
+            loadDataFromLocalStorage();
+            
+            // 更新UI显示
+            updateUI();
+            
+            // 存款表单提交事件
+            depositForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const amountInput = document.getElementById('deposit-amount');
+                const noteInput = document.getElementById('deposit-note');
+                
+                // 解析为浮点数并保留两位小数
+                const amount = parseFloat(amountInput.value).toFixed(2) * 1;
+                const note = noteInput.value || '无备注';
+                
+                if (isNaN(amount) || amount <= 0) {
+                    showNotification('请输入有效的金额（至少0.01元）', 'error');
+                    return;
+                }
+                
+                // 处理存款（保留两位小数精度）
+                currentAmount = (currentAmount + amount).toFixed(2) * 1;
+                totalDeposits = (totalDeposits + amount).toFixed(2) * 1;
+                
+                // 添加交易记录
+                const transaction = {
+                    id: Date.now(),
+                    type: 'deposit',
+                    amount: amount,
+                    note: note,
+                    date: new Date().toLocaleString()
+                };
+                
+                transactions.unshift(transaction); // 添加到数组开头
+                
+                // 保存数据
+                saveDataToLocalStorage();
+                
+                // 更新UI
+                updateUI();
+                
+                // 显示通知
+                showNotification(`成功存入 ${formatNumber(amount)} 元`, 'success');
+                
+                // 重置表单
+                depositForm.reset();
+            });
+            
+            // 支出表单提交事件
+            expenseForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const amountInput = document.getElementById('expense-amount');
+                const noteInput = document.getElementById('expense-note');
+                
+                // 解析为浮点数并保留两位小数
+                const amount = parseFloat(amountInput.value).toFixed(2) * 1;
+                const note = noteInput.value || '无备注';
+                
+                if (isNaN(amount) || amount <= 0) {
+                    showNotification('请输入有效的金额（至少0.01元）', 'error');
+                    return;
+                }
+                
+                if (amount > currentAmount) {
+                    showNotification('支出金额不能大于当前余额', 'error');
+                    return;
+                }
+                
+                // 处理支出（保留两位小数精度）
+                currentAmount = (currentAmount - amount).toFixed(2) * 1;
+                totalExpenses = (totalExpenses + amount).toFixed(2) * 1;
+                
+                // 添加交易记录
+                const transaction = {
+                    id: Date.now(),
+                    type: 'expense',
+                    amount: amount,
+                    note: note,
+                    date: new Date().toLocaleString()
+                };
+                
+                transactions.unshift(transaction); // 添加到数组开头
+                
+                // 保存数据
+                saveDataToLocalStorage();
+                
+                // 更新UI
+                updateUI();
+                
+                // 显示通知
+                showNotification(`成功支出 ${formatNumber(amount)} 元`, 'success');
+                
+                // 重置表单
+                expenseForm.reset();
+            });
+            
+            // 清空交易记录按钮事件
+            clearHistoryBtn.addEventListener('click', function() {
+                if (transactions.length === 0) {
+                    showNotification('没有记录可清空', 'info');
+                    return;
+                }
+                
+                if (confirm('确定要清空所有交易记录吗？当前余额不会受到影响。')) {
+                    transactions = [];
+                    saveDataToLocalStorage();
+                    updateUI();
+                    showNotification('交易记录已清空', 'info');
+                }
+            });
+            
+            // 重置所有本地数据按钮事件
+            function handleResetData() {
+                // 检查是否有数据可重置
+                if (currentAmount === 0 && totalDeposits === 0 && 
+                    totalExpenses === 0 && transactions.length === 0) {
+                    showNotification('没有数据可重置', 'info');
+                    return;
+                }
+                
+                if (confirm('确定要重置所有数据吗？这将清除所有余额和交易记录，恢复到初始状态。')) {
+                    // 重置所有数据
+                    currentAmount = 0;
+                    totalDeposits = 0;
+                    totalExpenses = 0;
+                    transactions = [];
+                    
+                    // 清除本地存储
+                    localStorage.removeItem('savingsPlanData');
+                    
+                    // 更新UI
+                    updateUI();
+                    
+                    // 显示通知
+                    showNotification('所有数据已重置', 'success');
+                }
+            }
+            
+            // 绑定重置数据按钮事件
+            resetDataBtn.addEventListener('click', handleResetData);
+            resetDataMobileBtn.addEventListener('click', handleResetData);
+            
+            // 更新UI显示
+            function updateUI() {
+                // 更新当前金额（显示两位小数）
+                currentAmountEl.textContent = formatNumber(currentAmount);
+                
+                // 计算进度百分比，使用截断方式保留两位小数，而非四舍五入
+                // 方法：先放大100倍，取整数部分，再缩小100倍
+                const progressPercentage = Math.min(
+                    Math.floor((currentAmount / TARGET_AMOUNT) * 10000) / 100, 
+                    100
+                ).toFixed(2);
+                
+                // 更新进度条和百分比显示（使用截断后的两位小数精度）
+                progressBarEl.style.width = `${progressPercentage}%`;
+                progressPercentageEl.textContent = `${progressPercentage}%`;
+                
+                // 更新剩余金额（显示两位小数）
+                const remainingAmount = (TARGET_AMOUNT - currentAmount).toFixed(2) * 1;
+                remainingAmountEl.textContent = formatNumber(remainingAmount);
+                
+                // 更新统计数据（显示两位小数）
+                totalDepositsEl.textContent = `${formatNumber(totalDeposits)} 元`;
+                totalExpensesEl.textContent = `${formatNumber(totalExpenses)} 元`;
+                transactionCountEl.textContent = `${transactions.length} 次`;
+                
+                // 更新交易记录
+                updateTransactionsList();
+                
+                // 添加数字变化动画
+                currentAmountEl.classList.add('scale-110');
+                setTimeout(() => {
+                    currentAmountEl.classList.remove('scale-110');
+                }, 300);
+                
+                // 如果达到目标，显示庆祝消息
+                if (currentAmount >= TARGET_AMOUNT) {
+                    showNotification('恭喜你达成100万目标！🎉', 'success', 5000);
+                }
+            }
+            
+            // 更新交易记录列表
+            function updateTransactionsList() {
+                if (transactions.length === 0) {
+                    noTransactionsEl.classList.remove('hidden');
+                    transactionsList.classList.add('hidden');
+                    return;
+                }
+                
+                noTransactionsEl.classList.add('hidden');
+                transactionsList.classList.remove('hidden');
+                
+                // 清空列表
+                transactionsList.innerHTML = '';
+                
+                // 添加交易记录
+                transactions.forEach(transaction => {
+                    const li = document.createElement('li');
+                    li.className = 'p-4 hover:bg-gray-50 transition-colors';
+                    
+                    const typeClass = transaction.type === 'deposit' ? 'text-primary' : 'text-danger';
+                    const typeIcon = transaction.type === 'deposit' ? 'fa-plus-circle' : 'fa-minus-circle';
+                    const typeText = transaction.type === 'deposit' ? '存入' : '支出';
+                    const amountSign = transaction.type === 'deposit' ? '+' : '-';
+                    
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center">
+                                    <i class="fa ${typeIcon} ${typeClass} mr-2"></i>
+                                    <span class="font-medium">${typeText}</span>
+                                </div>
+                                <div class="flex items-center mt-1 text-sm">
+                                    <span class="text-gray-500 mr-4">${transaction.note}</span>
+                                    <span class="text-gray-400">${transaction.date}</span>
+                                </div>
+                            </div>
+                            <span class="font-bold ${typeClass}">${amountSign}${formatNumber(transaction.amount)} 元</span>
+                        </div>
+                    `;
+                    
+                    transactionsList.appendChild(li);
+                });
+            }
+            
+            // 显示通知
+            function showNotification(message, type = 'info', duration = 3000) {
+                // 设置通知样式
+                notificationEl.textContent = message;
+                
+                if (type === 'success') {
+                    notificationEl.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 flex items-center z-50 bg-green-50 text-green-800 border border-green-200';
+                    notificationEl.innerHTML = `<i class="fa fa-check-circle mr-2"></i> ${message}`;
+                } else if (type === 'error') {
+                    notificationEl.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 flex items-center z-50 bg-red-50 text-red-800 border border-red-200';
+                    notificationEl.innerHTML = `<i class="fa fa-exclamation-circle mr-2"></i> ${message}`;
+                } else {
+                    notificationEl.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 flex items-center z-50 bg-blue-50 text-blue-800 border border-blue-200';
+                    notificationEl.innerHTML = `<i class="fa fa-info-circle mr-2"></i> ${message}`;
+                }
+                
+                // 自动隐藏通知
+                setTimeout(() => {
+                    notificationEl.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center z-50';
+                }, duration);
+            }
+            
+            // 格式化数字为带千分位和两位小数的格式
+            function formatNumber(num) {
+                // 确保数字保留两位小数
+                const fixedNum = parseFloat(num).toFixed(2);
+                // 格式化千分位
+                return fixedNum.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            
+            // 保存数据到本地存储
+            function saveDataToLocalStorage() {
+                const data = {
+                    currentAmount: currentAmount,
+                    totalDeposits: totalDeposits,
+                    totalExpenses: totalExpenses,
+                    transactions: transactions
+                };
+                
+                localStorage.setItem('savingsPlanData', JSON.stringify(data));
+            }
+            
+            // 从本地存储加载数据
+            function loadDataFromLocalStorage() {
+                const data = localStorage.getItem('savingsPlanData');
+                
+                if (data) {
+                    const parsedData = JSON.parse(data);
+                    currentAmount = parseFloat(parsedData.currentAmount) || 0;
+                    totalDeposits = parseFloat(parsedData.totalDeposits) || 0;
+                    totalExpenses = parseFloat(parsedData.totalExpenses) || 0;
+                    transactions = parsedData.transactions || [];
+                }
+            }
+            
+            // 页面滚动时改变导航栏样式
+            window.addEventListener('scroll', function() {
+                const header = document.querySelector('header');
+                if (window.scrollY > 10) {
+                    header.classList.add('py-2', 'shadow');
+                    header.classList.remove('py-4');
+                } else {
+                    header.classList.add('py-4');
+                    header.classList.remove('py-2', 'shadow');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+    
